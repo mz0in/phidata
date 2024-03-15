@@ -38,4 +38,9 @@ venv*
 phienv*
 aienv*
 
+# ignore tmp dirs
+scratch
+junk
+tmp
+
 .ipynb_checkpoints

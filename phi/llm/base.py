@@ -16,7 +16,7 @@ class LLM(BaseModel):
     name: Optional[str] = None
     # Metrics collected for this LLM. Note: This is not sent to the LLM API.
     metrics: Dict[str, Any] = {}
-    response_format: Optional[Dict[str, Any]] = None
+    response_format: Optional[Any] = None
 
     # A list of tools provided to the LLM.
     # Tools are functions the model may generate JSON inputs for.
@@ -39,7 +39,7 @@ class LLM(BaseModel):
     # Functions extracted from the tools. Note: These are not sent to the LLM API and are only used for execution.
     functions: Optional[Dict[str, Function]] = None
     # Maximum number of function calls allowed across all iterations.
-    function_call_limit: int = 20
+    function_call_limit: int = 10
     # Function call stack.
     function_call_stack: Optional[List[FunctionCall]] = None
 
@@ -52,22 +52,22 @@ class LLM(BaseModel):
     def api_kwargs(self) -> Dict[str, Any]:
         raise NotImplementedError
 
-    def invoke_model(self, *args, **kwargs) -> Any:
+    def invoke(self, *args, **kwargs) -> Any:
         raise NotImplementedError
 
-    def invoke_model_stream(self, *args, **kwargs) -> Iterator[Any]:
+    def invoke_stream(self, *args, **kwargs) -> Iterator[Any]:
         raise NotImplementedError
 
-    def parsed_response(self, messages: List[Message]) -> str:
+    def response(self, messages: List[Message]) -> str:
         raise NotImplementedError
 
-    def response_message(self, messages: List[Message]) -> Dict:
+    def response_stream(self, messages: List[Message]) -> Iterator[str]:
         raise NotImplementedError
 
-    def parsed_response_stream(self, messages: List[Message]) -> Iterator[str]:
+    def generate(self, messages: List[Message]) -> Dict:
         raise NotImplementedError
 
-    def response_delta(self, messages: List[Message]) -> Iterator[Dict]:
+    def generate_stream(self, messages: List[Message]) -> Iterator[Dict]:
         raise NotImplementedError
 
     def to_dict(self) -> Dict[str, Any]:
@@ -135,8 +135,9 @@ class LLM(BaseModel):
             _function_call_timer.stop()
             _function_call_result = Message(
                 role=role,
-                tool_call_id=function_call.call_id,
                 content=function_call.result,
+                tool_call_id=function_call.call_id,
+                tool_call_name=function_call.function.name,
                 metrics={"time": _function_call_timer.elapsed},
             )
             if "tool_call_times" not in self.metrics:

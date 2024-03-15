@@ -21,7 +21,7 @@ class Function(BaseModel):
     sanitize_arguments: bool = True
 
     def to_dict(self) -> Dict[str, Any]:
-        return self.model_dump(exclude_none=True, exclude={"entrypoint"})
+        return self.model_dump(exclude_none=True, include={"name", "description", "parameters"})
 
     @classmethod
     def from_callable(cls, c: Callable) -> "Function":
@@ -89,7 +89,7 @@ class FunctionCall(BaseModel):
 
         trimmed_arguments = {}
         for k, v in self.arguments.items():
-            if isinstance(v, str) and len(v) > 50:
+            if isinstance(v, str) and len(v) > 100:
                 trimmed_arguments[k] = "..."
             else:
                 trimmed_arguments[k] = v
